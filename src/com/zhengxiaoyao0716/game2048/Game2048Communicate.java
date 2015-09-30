@@ -1,6 +1,7 @@
 package com.zhengxiaoyao0716.game2048;
 
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * 回调接口，与游戏进行交互.
