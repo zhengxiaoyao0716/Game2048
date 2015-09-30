@@ -70,15 +70,18 @@ public class Game2048 {
 	
 	/**
 	 * 开始游戏.
-	 * <p>调用这个方法将使游戏从SLEEPING进入RUNNING状态，并且将会自动加载存档<br>
+	 * <p>
+	 * 调用这个方法将使游戏从SLEEPING进入RUNNING状态，并且将会自动加载存档<br>
 	 * 如果加载成功，棋盘高度、宽度、游戏目标等以存档为准<br>
 	 * 如果加载失败则以默认参数开始新游戏<br>
+	 * </p>
 	 * @throws IllegalStateException 你仅应当在游戏处于结束状态时调用这个方法，否则会收这个错误
 	 */
 	public synchronized void startGame() throws IllegalStateException
 	{
 		if (gameState != GameState.SLEEPING)
-			throw new IllegalStateException("Game is already running.");
+			throw new IllegalStateException(new StringBuilder("Current state: ").append(gameState.name())
+					.append(" Request: ").append("SLEEPING").toString());
 		else gameState = GameState.RUNNING;
 
 		lastBoard = null;
@@ -97,13 +100,20 @@ public class Game2048 {
 	
 	/**
 	 * 退出游戏.
-	 * <p>当成功退出游戏后游戏将进入SLEEPING状态，你只能通过startGame();方法来唤醒它<br>
-	 * @return true:保存成功 false:保存失败，游戏将处于SAVE_FAILED状态，你必须通过saveFailedRespond();方法来唤醒它。
+	 * <p>
+	 * 当成功保存并结束后游戏将进入SLEEPING状态，你只能通过startGame();方法来唤醒它<br>
+	 * 当引保存失败而未结束时，游戏将处于SAVE_FAILED状态，<br>
+	 * 并且调用Communicate接口的saveFailedIsStillQuit();方法。<br>
+	 * 你需要利用其参数中的informer接口来向游戏主体发送用户的选择，调整游戏状态。<br>
+	 * </p>
+	 * @return true:保存成功 false:保存失败
 	 * @throws IllegalStateException 你仅应当在游戏处于运行状态时调用这个方法，否则会收这个错误
 	 */
 	public synchronized boolean finishGame() throws IllegalStateException
 	{
-		if (gameState != GameState.RUNNING) throw new IllegalStateException("Game isn't running");
+		if (gameState != GameState.RUNNING)
+			throw new IllegalStateException(new StringBuilder("Current state: ").append(gameState.name())
+			.append(" Request: ").append("RUNNING").toString());
 		else if (saveData()) {
 			board = lastBoard = null;
 			level = score = 0;
@@ -112,16 +122,24 @@ public class Game2048 {
 		}
 		else {
 			gameState = GameState.SAVE_FAILED;
+			communicate.saveFailedIsStillQuit( new Game2048Communicate.Informer() {
+				@Override
+				public void commit(boolean decision) {
+					saveFailedRespond(decision);
+				}
+			});
 			return false;
 		}
 	}
 	
 	/**
 	 * 重新开始.
+	 * <p>
 	 * 这个方法会将游戏从任何状态置为RUNNING状态。<br>
 	 * 但你最好不要轻易这么做，尤其不要以此来将游戏从SLEEPING唤醒，<br>
 	 * 这会使得上次的游戏进度无法自动读取，但却仍然存在。<br>
 	 * 它本意主要是用来在RUNNING状态下重新开始游戏。
+	 * </p>
 	 * @param isKeepLevel 是否保留当前关卡
 	 */
 	public synchronized void replay(boolean isKeepLevel)
@@ -153,6 +171,10 @@ public class Game2048 {
 	}
 	private ChangeResult changeResult;
 
+	/**
+	 * 这里我选择不用枚举，是因为我本来就是要把方向数字化，
+	 * 那个常量更多的只是个记号，毕竟上下左右在不同坐标系上是不同的。
+	 */
 	public static final int UP		= 0;
 	public static final int LEFT	= 1;
 	public static final int RIGHT	= 2;
@@ -160,17 +182,18 @@ public class Game2048 {
 	
 	/**
 	 * 一次完整动作.
-	 * <p>一次完整动作后，游戏可能会进入GAME_END、LEVEL_UP状态<br>
-	 * 你应当针对在作完相应的事件处理后调用相应的方法：<br>
-	 * gameEndRespond();、levelUpRespond();，来回到RUNNING状态<br>
+	 * <p>
+	 * 一次完整动作后，游戏可能会进入GAME_END、LEVEL_UP状态<br>
+	 * 并调用Communicate接口的相应方法，你需要借助其中传出的informer来调整游戏状态<br>
 	 * 当然也可能继续处于普通的RUNNING状态下。<br>
-	 * 建议你直接传入这个类定义的常量，UP, LEFT, RIGHT, DOWN。<br>
-	 * 如果有需要可以传入其对应的int值0, 1, 2, 3。<br>
-	 * 你可用这个算法简单计算得到期望的值：<br>
+	 * 你可以直接传入这个类定义的常量，UP, LEFT, RIGHT, DOWN。<br>
+	 * 但如果可以的话更建议你传入其对应的int值0, 1, 2, 3。<br>
+	 * 这个值可以通过简单运算得到：<br>
 	 * 设有直角坐标系，height为纵轴，width为横轴<br>
 	 * downH、downW、upH、upW分别为按下/抬起点的纵/横坐标 <br>
 	 * 纵/横轴移动偏移量moveH = upH - downH; moveW = upW - downW;<br>
 	 * 则传入action的移动方向参数可表达为：<br>
+	 * </p>
 	 * {@code direction = ((moveH + moveW) > 0 ? 0 : 2) + (moveH > moveW) ? 0: 1);}<br>
 	 * @param direction 0:down 1:right 2:left 3:up
 	 * @throws IllegalStateException 你仅应当在游戏处于运行状态时调用这个方法，否则会收这个错误
@@ -178,7 +201,9 @@ public class Game2048 {
 	 */
 	public synchronized void action(int direction) throws IllegalStateException, IllegalArgumentException
 	{
-		if (gameState != GameState.RUNNING) throw new IllegalStateException("Game isn't running");
+		if (gameState != GameState.RUNNING)
+			throw new IllegalStateException(new StringBuilder("Current state: ").append(gameState.name())
+					.append(" Request: ").append("RUNNING").toString());
 
 		int[][] lastBoard = board.clone();
 		
@@ -197,6 +222,12 @@ public class Game2048 {
 			if (isGameOver(direction))
 			{
 				gameState = GameState.GAME_END;
+				communicate.gameEndIsReplay(level, score, new Game2048Communicate.Informer() {
+					@Override
+					public void commit(boolean decision) {
+						gameEndRespond(decision);
+					}
+				});
 				return;
 			}
 			else
@@ -216,6 +247,13 @@ public class Game2048 {
 			lastBoard = null;
 			showData(level, score, board);
 			score = 0;
+			gameState = GameState.LEVEL_UP;
+			communicate.levelUpIsEnterNextLevel(level, score, new Game2048Communicate.Informer() {
+				@Override
+				public void commit(boolean decision) {
+					levelUpRespond(decision);
+				}
+			});
 		}break;
 		}
 
@@ -232,7 +270,9 @@ public class Game2048 {
 	 */
 	public synchronized boolean backStep() throws IllegalStateException
 	{
-		if (gameState != GameState.RUNNING) throw new IllegalStateException("Game isn't running");
+		if (gameState != GameState.RUNNING)
+			throw new IllegalStateException(new StringBuilder("Current state: ").append(gameState.name())
+					.append(" Request: ").append("RUNNING").toString());
 
 		if (lastBoard==null) return false;
 		board = lastBoard.clone();
@@ -248,7 +288,9 @@ public class Game2048 {
 	 */
 	public synchronized boolean cleanGrid(int height, int width) throws IllegalStateException
 	{
-		if (gameState != GameState.RUNNING) throw new IllegalStateException("Game isn't running");
+		if (gameState != GameState.RUNNING)
+			throw new IllegalStateException(new StringBuilder("Current state: ").append(gameState.name())
+					.append(" Request: ").append("RUNNING").toString());
 
 		if (height < 0 || height>=boardH || width < 0 || width>=boardW)
 			return false;
@@ -262,12 +304,13 @@ public class Game2048 {
 	/**
 	 * 保存失败的响应.
 	 * @param forceEnd 是否强制结束游戏
-	 * @throws IllegalStateException 当游戏并未处于'SAVE_FAILED'状态时错误的调用会抛出这个异常
+	 * @throws IllegalStateException 当游戏并未处于SAVE_FAILED状态时错误的调用会抛出这个异常
 	 */
-	public void saveFailedRespond(boolean forceEnd) throws IllegalStateException
+	protected void saveFailedRespond(boolean forceEnd) throws IllegalStateException
 	{
 		if (gameState != GameState.SAVE_FAILED)
-			throw new IllegalStateException("Game isn't in 'SAVE_FAILED' state.");
+			throw new IllegalStateException(new StringBuilder("Current state: ").append(gameState.name())
+					.append(" Request: ").append("SAVE_FAILED").toString());
 		else if (forceEnd)
 		{
 			board = lastBoard = null;
@@ -279,24 +322,26 @@ public class Game2048 {
 	/**
 	 * 游戏结束的响应.
 	 * @param isReplay 是否重玩当前关卡，false则什么也不做。
-	 * @throws IllegalStateException 当游戏并未处于'GAME_END'状态时错误的调用会抛出这个异常
+	 * @throws IllegalStateException 当游戏并未处于GAME_END状态时错误的调用会抛出这个异常
 	 */
-	public void gameOverRespond(boolean isReplay) throws IllegalStateException
+	protected void gameEndRespond(boolean isReplay) throws IllegalStateException
 	{
 		if (gameState != GameState.GAME_END)
-			throw new IllegalStateException("Game isn't in 'GAME_END' state.");
+			throw new IllegalStateException(new StringBuilder("Current state: ").append(gameState.name())
+					.append(" Request: ").append("GAME_END").toString());
 		else if (isReplay) replay(true);
 		gameState = GameState.RUNNING;
 	}
 	/**
 	 * 达到目标的响应.
 	 * @param goNextLevel 是否进入下一难度关卡，false则重玩当前关卡
-	 * @throws IllegalStateException 当游戏并未处于'LEVEL_UP'状态时错误的调用会抛出这个异常
+	 * @throws IllegalStateException 当游戏并未处于LEVEL_UP状态时错误的调用会抛出这个异常
 	 */
-	public void levelUpRespond(boolean goNextLevel) throws IllegalStateException
+	protected void levelUpRespond(boolean goNextLevel) throws IllegalStateException
 	{
 		if (gameState != GameState.LEVEL_UP)
-			throw new IllegalStateException("Game isn't in 'LEVEL_UP' state.");
+			throw new IllegalStateException(new StringBuilder("Current state: ").append(gameState.name())
+					.append(" Request: ").append("LEVEL_UP").toString());
 		else if (goNextLevel)
 		{
 			for (int height = 0; height < boardH; height++)
@@ -325,9 +370,10 @@ public class Game2048 {
 	{
 		int boardH = board.length;
 		int boardW = board[0].length;
+		//同上，这里本来就只想用数字表示方向，常量在这里没有任何意义。
 		switch (direction)
 		{
-		case UP:			//up
+		case 0:			//up
 		{
 			int[][] tempBoard = new int[boardW][boardH];
 			for (int height = 0; height < boardH; height++)
@@ -336,9 +382,9 @@ public class Game2048 {
 							= board[height][width];
 			board = tempBoard;
 		}break;
-		case LEFT:			//left
+		case 1:			//left
 			break;
-		case RIGHT:			//right
+		case 2:			//right
 		{
 			int[][] tempBoard = new int[boardH][boardW];
 			for (int height = 0; height < boardH; height++)
@@ -347,7 +393,7 @@ public class Game2048 {
 							= board[height][width];
 			board = tempBoard;
 		}break;
-		case DOWN:			//down
+		case 3:			//down
 		{
 			int[][] tempBoard = new int[boardW][boardH];
 			for (int height = 0; height < boardH; height++)
@@ -365,7 +411,7 @@ public class Game2048 {
 	{
 		for (int height = 0; height < board.length; height++)
 		{
-			ArrayList<Integer> tempRow = new ArrayList<>(board[0].length);
+			ArrayList<Integer> tempRow = new ArrayList<Integer>(board[0].length);
 			int noneZeroPos = 0;
 			for (int width = 0; width < board[0].length; width++)
 				if (board[height][width]!=0)
@@ -406,7 +452,7 @@ public class Game2048 {
 	//生成新的
 	private void birthNew()
 	{
-		ArrayList<int[]> zeroPoints = new ArrayList<>();
+		ArrayList<int[]> zeroPoints = new ArrayList<int[]>();
 		for (int height = 0; height < boardH; height++ )
 		{
 			for (int width = 0; width < boardW; width++)
@@ -471,7 +517,7 @@ public class Game2048 {
 	private synchronized boolean saveData()
 	{
 		//save
-		HashMap<String, Object> dataMap = new HashMap<>();
+		HashMap<String, Object> dataMap = new HashMap<String, Object>();
 		dataMap.put("aimNum", aimNum);
 		dataMap.put("level", level);
 		dataMap.put("score", score);
