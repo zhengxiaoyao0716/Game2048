@@ -6,7 +6,8 @@ import java.util.Random;
 
 /**
  * 功能齐全的2048.
- * <P>使用说明：<br>
+ * <P>
+ * 使用说明：<br>
  * step 1：实现游戏所需的功能<br>
  * ____您需要一个回调接口(GameCommunicate)的实例，请按照提示实现接口中的所有方法。<br>
  * step 2：初始化游戏<br>
@@ -24,6 +25,7 @@ import java.util.Random;
  * ________cleanGrid(int height, int width);	清除某一格，即炸弹~<br>
  * ____你应当按自然的顺序来进行游戏，不要试图做一些违反常识的行为<br>
  * ________例如，你显然不应该在未开始化游戏前结束游戏，如果你那样做了，将会收到一个IllegalStateException异常<br>
+ * </p>
  * @author 正逍遥0716 QQ:1499383852
  * @version 2.0.0
  */
@@ -49,7 +51,7 @@ public class Game2048 {
 	 * @throws IllegalArgumentException 参数不符合限制
 	 */
 	public Game2048(Game2048Communicate communicate,
-			int boardH, int boardW, int aimNum) throws NullPointerException, IllegalArgumentException
+			int boardH, int boardW, int aimNum)
 	{
 		if (communicate == null)
 			throw new NullPointerException("communicate==null");
@@ -71,13 +73,13 @@ public class Game2048 {
 	/**
 	 * 开始游戏.
 	 * <p>
-	 * 调用这个方法将使游戏从SLEEPING进入RUNNING状态，并且将会自动加载存档<br>
-	 * 如果加载成功，棋盘高度、宽度、游戏目标等以存档为准<br>
-	 * 如果加载失败则以默认参数开始新游戏<br>
+	 * 调用这个方法将使游戏从SLEEPING进入RUNNING状态，并且将会自动加载存档。<br>
+	 * 如果加载成功，棋盘高度、宽度、游戏目标等以存档为准；<br>
+	 * 如果加载失败则以默认参数开始新游戏。<br>
 	 * </p>
 	 * @throws IllegalStateException 你仅应当在游戏处于结束状态时调用这个方法，否则会收这个错误
 	 */
-	public synchronized void startGame() throws IllegalStateException
+	public synchronized void startGame()
 	{
 		if (gameState != GameState.SLEEPING)
 			throw new IllegalStateException(new StringBuilder("Current state: ").append(gameState.name())
@@ -109,7 +111,7 @@ public class Game2048 {
 	 * @return true:保存成功 false:保存失败
 	 * @throws IllegalStateException 你仅应当在游戏处于运行状态时调用这个方法，否则会收这个错误
 	 */
-	public synchronized boolean finishGame() throws IllegalStateException
+	public synchronized boolean finishGame()
 	{
 		if (gameState != GameState.RUNNING)
 			throw new IllegalStateException(new StringBuilder("Current state: ").append(gameState.name())
@@ -183,8 +185,8 @@ public class Game2048 {
 	/**
 	 * 一次完整动作.
 	 * <p>
-	 * 一次完整动作后，游戏可能会进入GAME_END、LEVEL_UP状态<br>
-	 * 并调用Communicate接口的相应方法，你需要借助其中传出的informer来调整游戏状态<br>
+	 * 一次完整动作后，游戏可能会进入GAME_END、LEVEL_UP状态，<br>
+	 * 并调用Communicate接口的相应方法，你需要借助其中传出的informer来调整游戏状态，<br>
 	 * 当然也可能继续处于普通的RUNNING状态下。<br>
 	 * 你可以直接传入这个类定义的常量，UP, LEFT, RIGHT, DOWN。<br>
 	 * 但如果可以的话更建议你传入其对应的int值0, 1, 2, 3。<br>
@@ -199,7 +201,7 @@ public class Game2048 {
 	 * @throws IllegalStateException 你仅应当在游戏处于运行状态时调用这个方法，否则会收这个错误
 	 * @throws IllegalArgumentException 参数direction不符合限制
 	 */
-	public synchronized void action(int direction) throws IllegalStateException, IllegalArgumentException
+	public synchronized void action(int direction)
 	{
 		if (gameState != GameState.RUNNING)
 			throw new IllegalStateException(new StringBuilder("Current state: ").append(gameState.name())
@@ -268,7 +270,7 @@ public class Game2048 {
 	 * @return true:撤销成功 false:撤销失败（没有可撤销的步骤）
 	 * @throws IllegalStateException 你仅应当在游戏处于运行状态时调用这个方法，否则会收这个错误
 	 */
-	public synchronized boolean backStep() throws IllegalStateException
+	public synchronized boolean backStep()
 	{
 		if (gameState != GameState.RUNNING)
 			throw new IllegalStateException(new StringBuilder("Current state: ").append(gameState.name())
@@ -286,7 +288,7 @@ public class Game2048 {
 	 * @return true:清除成功 false:清除失败（该格子不存在或值为0）
 	 * @throws IllegalStateException 你仅应当在游戏处于运行状态时调用这个方法，否则会收这个错误
 	 */
-	public synchronized boolean cleanGrid(int height, int width) throws IllegalStateException
+	public synchronized boolean cleanGrid(int height, int width)
 	{
 		if (gameState != GameState.RUNNING)
 			throw new IllegalStateException(new StringBuilder("Current state: ").append(gameState.name())
@@ -306,7 +308,7 @@ public class Game2048 {
 	 * @param forceEnd 是否强制结束游戏
 	 * @throws IllegalStateException 当游戏并未处于SAVE_FAILED状态时错误的调用会抛出这个异常
 	 */
-	private void saveFailedRespond(boolean forceEnd) throws IllegalStateException
+	private void saveFailedRespond(boolean forceEnd)
 	{
 		if (gameState != GameState.SAVE_FAILED)
 			throw new IllegalStateException(new StringBuilder("Current state: ").append(gameState.name())
@@ -324,7 +326,7 @@ public class Game2048 {
 	 * @param isReplay 是否重玩当前关卡，false则什么也不做。
 	 * @throws IllegalStateException 当游戏并未处于GAME_END状态时错误的调用会抛出这个异常
 	 */
-	private void gameEndRespond(boolean isReplay) throws IllegalStateException
+	private void gameEndRespond(boolean isReplay)
 	{
 		if (gameState != GameState.GAME_END)
 			throw new IllegalStateException(new StringBuilder("Current state: ").append(gameState.name())
@@ -337,7 +339,7 @@ public class Game2048 {
 	 * @param goNextLevel 是否进入下一难度关卡，false则重玩当前关卡
 	 * @throws IllegalStateException 当游戏并未处于LEVEL_UP状态时错误的调用会抛出这个异常
 	 */
-	private void levelUpRespond(boolean goNextLevel) throws IllegalStateException
+	private void levelUpRespond(boolean goNextLevel)
 	{
 		if (gameState != GameState.LEVEL_UP)
 			throw new IllegalStateException(new StringBuilder("Current state: ").append(gameState.name())
@@ -366,7 +368,7 @@ public class Game2048 {
 
 	/*过程方法*/
 	//方向转换
-	private void changeBoard(int direction) throws IllegalArgumentException
+	private void changeBoard(int direction)
 	{
 		int boardH = board.length;
 		int boardW = board[0].length;
@@ -469,7 +471,7 @@ public class Game2048 {
 				= (1 + new Random().nextInt(2))<<1;
 	}
 	//是否结束
-	private boolean isGameOver(int direction) throws IllegalArgumentException
+	private boolean isGameOver(int direction)
 	{
 		changeBoard(direction);
 		boolean isGameOver = true;
