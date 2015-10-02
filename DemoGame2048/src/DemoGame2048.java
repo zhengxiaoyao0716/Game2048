@@ -186,7 +186,7 @@ public class DemoGame2048 {
         }
 
         @Override
-        public void gameEndIsReplay(int level, int score, Informer informer) {
+        public void gameEndReplayThisLevel(int level, int score, Informer informer) {
             System.out.println("Game over!");
             System.out.println("Continue?");
             String input = scanner.next();
@@ -200,7 +200,7 @@ public class DemoGame2048 {
         }
 
         @Override
-        public void levelUpIsEnterNextLevel(int level, int score, Informer informer) {
+        public void levelUpEnterNextLevel(int level, int score, Informer informer) {
             System.out.println("Level up!");
             System.out.println("Are you willing to play hard-mode?");
             String input = scanner.next();

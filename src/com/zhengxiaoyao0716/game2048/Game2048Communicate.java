@@ -83,12 +83,12 @@ public interface Game2048Communicate
 	 * @param score	可以用来保存游戏最高得分记录等
 	 * @param informer 调用其commit();方法提交玩家的选择，true:重玩当前关卡 false:返回查看原因
 	 */
-	void gameEndIsReplay(int level, int score, final Informer informer);
+	void gameEndReplayThisLevel(int level, int score, final Informer informer);
 	/**
 	 * 达到目标的分数时调用.
 	 * @param level 当前等级（升级结算前）
 	 * @param score 当前得分，被设计用来满足记录在某一等级上的最高得分的需求
 	 * @param informer 调用其commit();方法提交玩家的选择，true:进入下一难度关卡 false:重玩当前关卡
 	 */
-	void levelUpIsEnterNextLevel(int level, int score, final Informer informer);
+	void levelUpEnterNextLevel(int level, int score, final Informer informer);
 }

@@ -114,7 +114,7 @@ public class Game2048 {
 	 * <p>
 	 * 当成功保存并结束后游戏将进入SLEEPING状态，你只能通过startGame();方法来唤醒它<br>
 	 * 当引保存失败而未结束时，游戏将处于SAVE_FAILED状态，<br>
-	 * 并且调用Communicate接口的saveFailedIsStillQuit();方法。<br>
+	 * 并且调用Communicate接口的saveFailedIsStillFinish();方法。<br>
 	 * 你需要利用其参数中的informer接口来向游戏主体发送用户的选择，调整游戏状态。<br>
 	 * 发送true将强制结束游戏，进入SLEEPING状态，<br>
 	 * 发送false则不做处理，回到RUNNING状态。<br>
@@ -235,7 +235,7 @@ public class Game2048 {
 			if (isGameOver(direction))
 			{
 				gameState = GameState.GAME_END;
-				communicate.gameEndIsReplay(level, score, new Game2048Communicate.Informer() {
+				communicate.gameEndReplayThisLevel(level, score, new Game2048Communicate.Informer() {
 					@Override
 					public void commit(boolean decision) {
 						gameEndRespond(decision);
@@ -261,7 +261,7 @@ public class Game2048 {
 			showData(level, score, board);
 			score = 0;
 			gameState = GameState.LEVEL_UP;
-			communicate.levelUpIsEnterNextLevel(level, score, new Game2048Communicate.Informer() {
+			communicate.levelUpEnterNextLevel(level, score, new Game2048Communicate.Informer() {
 				@Override
 				public void commit(boolean decision) {
 					levelUpRespond(decision);
