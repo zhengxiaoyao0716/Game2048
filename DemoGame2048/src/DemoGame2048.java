@@ -45,7 +45,7 @@ public class DemoGame2048 {
                     if (game2048.finishGame()) {
                         System.out.println("Quit.");
                         isGameRunning = false;
-                    } else System.out.println("Quit game failed");
+                    }
                 } else if (s.equals("h") || s.equals("backStep")) {
                     if (!game2048.backStep()) System.out.println("Back failed.");
                     else System.out.println("backStep.");
@@ -72,18 +72,20 @@ public class DemoGame2048 {
                     System.out.println("Game end.");
                     break;
                 } else if (s.equals("g") || s.equals("start")) {
-                    game2048.startGame();
-                    isGameRunning = true;
-                    System.out.printf("Game start.\n"
-                            + "Commend list:\n"
-                            + "w->up\n"
-                            + "s->down\n"
-                            + "a->left\n"
-                            + "d->right\n"
-                            + "f->replay\n"
-                            + "g->quit\n"
-                            + "h->backStep\n"
-                            + "j->cleanGrid\n");
+                    if (game2048.startGame())
+                    {
+                        isGameRunning = true;
+                        System.out.printf("Game start.\n"
+                                + "Commend list:\n"
+                                + "w->up\n"
+                                + "s->down\n"
+                                + "a->left\n"
+                                + "d->right\n"
+                                + "f->replay\n"
+                                + "g->quit\n"
+                                + "h->backStep\n"
+                                + "j->cleanGrid\n");
+                    }
                 } else {
                     System.out.println("Unknown input!");
 
@@ -97,13 +99,13 @@ public class DemoGame2048 {
     {
         @Override
         public Map<String, Object> loadData() {
-            System.out.println("Loading data");
+            System.out.println("Loading data...");
             return null;
         }
 
         @Override
         public boolean saveData(Map<String, Object> data) {
-            System.out.println("Saving data");
+            System.out.println("Saving data...");
             return false;
         }
 
@@ -158,7 +160,20 @@ public class DemoGame2048 {
         }
 
         @Override
-        public void saveFailedIsStillQuit(Informer informer) {
+        public void loadFailedIsStartNew(Informer informer) {
+            System.out.println("Load failed!");
+            System.out.println("Start new game?");
+            String input = scanner.next();
+            if (input.equals("g")||input.equals("yes"))
+            {
+                isGameRunning = true;
+                informer.commit(true);
+            }
+            else informer.commit(false);
+        }
+
+        @Override
+        public void saveFailedIsStillFinish(Informer informer) {
             System.out.println("Save failed!");
             System.out.println("Still quit game?");
             String input = scanner.next();

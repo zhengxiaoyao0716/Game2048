@@ -68,10 +68,15 @@ public interface Game2048Communicate
 		void commit(boolean decision);
 	}
 	/**
-	 * 退出时保存失败调用.
+	 * 开始游戏读档失败时调用.
+	 * @param informer 调用其commit();方法提交玩家的选择，true:开始新的游戏 false:什么也不做
+	 */
+	void loadFailedIsStartNew(final Informer informer);
+	/**
+	 * 结束游戏保存失败时调用.
 	 * @param informer 调用其commit();方法提交玩家的选择，true:强制结束游戏 false:继续游戏
 	 */
-	void saveFailedIsStillQuit(final Informer informer);
+	void saveFailedIsStillFinish(final Informer informer);
 	/**
 	 * 本局游戏失败时调用.
 	 * @param level	可以用来保存游戏最高等级记录等

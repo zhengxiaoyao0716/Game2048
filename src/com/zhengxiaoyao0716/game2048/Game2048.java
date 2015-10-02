@@ -33,7 +33,7 @@ public class Game2048 {
 	private Game2048Communicate communicate;
 	private enum GameState
 	{
-		SLEEPING, RUNNING, SAVE_FAILED, GAME_END, LEVEL_UP
+		SLEEPING, RUNNING, LOAD_FAILED, SAVE_FAILED, GAME_END, LEVEL_UP
 	}
 	private GameState gameState;
 	private int boardH, boardW, aimNum;
@@ -73,31 +73,40 @@ public class Game2048 {
 	/**
 	 * 开始游戏.
 	 * <p>
-	 * 调用这个方法将使游戏从SLEEPING进入RUNNING状态，并且将会自动加载存档。<br>
-	 * 如果加载成功，棋盘高度、宽度、游戏目标等以存档为准；<br>
-	 * 如果加载失败则以默认参数开始新游戏。<br>
+	 * 调用这个方法将会自动加载存档，如果加载成功，<br>
+	 * 游戏从SLEEPING进入RUNNING状态，游戏数据以存档为准；<br>
+	 * 如果加载失败而未能开始游戏是，游戏将处于LOAD_FAILED状态，<br>
+	 * 并且调用Communicate接口的loadFailedIsStartNew();方法。<br>
+	 * 你需要利用其参数中的informer接口来向游戏主体发送用户的选择，调整游戏状态。<br>
+	 * 发送true将以构造器传入的默认参数开始新的游戏，进入RUNNING状态，<br>
+	 * 发送false则不做处理，回到SLEEPING状态。<br>
 	 * </p>
+	 * @return true:读档成功 false:读档失败
 	 * @throws IllegalStateException 你仅应当在游戏处于结束状态时调用这个方法，否则会收这个错误
 	 */
-	public synchronized void startGame()
+	public synchronized boolean startGame()
 	{
 		if (gameState != GameState.SLEEPING)
 			throw new IllegalStateException(new StringBuilder("Current state: ").append(gameState.name())
 					.append(" Request: ").append("SLEEPING").toString());
-		else gameState = GameState.RUNNING;
 
 		lastBoard = null;
-		
-		if (!loadData())
-		{
-			board = new int[boardH][boardW];
-			level = 1;
-			score = 0;
-			
-			birthNew();
+
+		if (loadData()) {
+			gameState = GameState.RUNNING;
+			showData(level, score, board);
+			return true;
 		}
-		
-		showData(level, score, board);
+		else {
+			gameState = GameState.LOAD_FAILED;
+			communicate.loadFailedIsStartNew(new Game2048Communicate.Informer() {
+				@Override
+				public void commit(boolean decision) {
+					loadFailedRespond(decision);
+				}
+			});
+			return false;
+		}
 	}
 	
 	/**
@@ -107,6 +116,8 @@ public class Game2048 {
 	 * 当引保存失败而未结束时，游戏将处于SAVE_FAILED状态，<br>
 	 * 并且调用Communicate接口的saveFailedIsStillQuit();方法。<br>
 	 * 你需要利用其参数中的informer接口来向游戏主体发送用户的选择，调整游戏状态。<br>
+	 * 发送true将强制结束游戏，进入SLEEPING状态，<br>
+	 * 发送false则不做处理，回到RUNNING状态。<br>
 	 * </p>
 	 * @return true:保存成功 false:保存失败
 	 * @throws IllegalStateException 你仅应当在游戏处于运行状态时调用这个方法，否则会收这个错误
@@ -124,7 +135,7 @@ public class Game2048 {
 		}
 		else {
 			gameState = GameState.SAVE_FAILED;
-			communicate.saveFailedIsStillQuit( new Game2048Communicate.Informer() {
+			communicate.saveFailedIsStillFinish(new Game2048Communicate.Informer() {
 				@Override
 				public void commit(boolean decision) {
 					saveFailedRespond(decision);
@@ -303,11 +314,24 @@ public class Game2048 {
 	}
 
 	/*状态响应*/
-	/**
-	 * 保存失败的响应.
-	 * @param forceEnd 是否强制结束游戏
-	 * @throws IllegalStateException 当游戏并未处于SAVE_FAILED状态时错误的调用会抛出这个异常
-	 */
+	//读档失败的响应，是否开始新游戏
+	private void loadFailedRespond(boolean startNew)
+	{
+		if (gameState != GameState.LOAD_FAILED)
+			throw new IllegalStateException(new StringBuilder("Current state: ").append(gameState.name())
+					.append(" Request: ").append("LOAD_FAILED").toString());
+		else if (startNew)
+		{
+			board = new int[boardH][boardW];
+			level = 1;
+			score = 0;
+			birthNew();
+			showData(level, score, board);
+			gameState = GameState.RUNNING;
+		}
+		else gameState = GameState.SLEEPING;
+	}
+	//保存失败的响应，是否强制结束游戏
 	private void saveFailedRespond(boolean forceEnd)
 	{
 		if (gameState != GameState.SAVE_FAILED)
@@ -321,11 +345,7 @@ public class Game2048 {
 		}
 		else gameState = GameState.RUNNING;
 	}
-	/**
-	 * 游戏结束的响应.
-	 * @param isReplay 是否重玩当前关卡，false则什么也不做。
-	 * @throws IllegalStateException 当游戏并未处于GAME_END状态时错误的调用会抛出这个异常
-	 */
+	//游戏结束的响应，是否重玩当前关卡，false则什么也不做。
 	private void gameEndRespond(boolean isReplay)
 	{
 		if (gameState != GameState.GAME_END)
@@ -334,11 +354,7 @@ public class Game2048 {
 		else if (isReplay) replay(true);
 		gameState = GameState.RUNNING;
 	}
-	/**
-	 * 达到目标的响应.
-	 * @param goNextLevel 是否进入下一难度关卡，false则重玩当前关卡
-	 * @throws IllegalStateException 当游戏并未处于LEVEL_UP状态时错误的调用会抛出这个异常
-	 */
+	//达到目标的响应，是否进入下一难度关卡，false则重玩当前关卡
 	private void levelUpRespond(boolean goNextLevel)
 	{
 		if (gameState != GameState.LEVEL_UP)
