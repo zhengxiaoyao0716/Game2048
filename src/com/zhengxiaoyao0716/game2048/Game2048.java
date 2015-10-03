@@ -362,8 +362,6 @@ public class Game2048 {
 					.append(" Request: ").append("LEVEL_UP").toString());
 		else if (goNextLevel)
 		{
-			score = 0;
-			level++;
 			for (int height = 0; height < boardH; height++)
 				for (int width = 0; width < boardW; width++)
 				{
@@ -372,6 +370,8 @@ public class Game2048 {
 					else if (board[height][width] <aimNum)
 						board[height][width] = 0;
 				}
+			score = 0;
+			level++;
 			showData(level, score, board);
 		}
 		else replay(true);
