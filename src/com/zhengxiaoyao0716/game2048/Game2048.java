@@ -372,6 +372,7 @@ public class Game2048 {
 				}
 			score = 0;
 			level++;
+			birthNew();
 			showData(level, score, board);
 		}
 		else replay(true);
