@@ -87,8 +87,8 @@ public class Game2048 {
 	public synchronized boolean startGame()
 	{
 		if (gameState != GameState.SLEEPING)
-			throw new IllegalStateException(new StringBuilder("Current state: ").append(gameState.name())
-					.append(" Request: ").append("SLEEPING").toString());
+			throw new IllegalStateException(
+					String.format("Current state: %s Request: SLEEPING", gameState.name()));
 
 		lastBoard = null;
 
@@ -125,8 +125,8 @@ public class Game2048 {
 	public synchronized boolean finishGame()
 	{
 		if (gameState != GameState.RUNNING)
-			throw new IllegalStateException(new StringBuilder("Current state: ").append(gameState.name())
-			.append(" Request: ").append("RUNNING").toString());
+			throw new IllegalStateException(
+					String.format("Current state: %s Request: RUNNING", gameState.name()));
 		else if (saveData()) {
 			board = lastBoard = null;
 			level = score = 0;
@@ -215,8 +215,8 @@ public class Game2048 {
 	public synchronized void action(int direction)
 	{
 		if (gameState != GameState.RUNNING)
-			throw new IllegalStateException(new StringBuilder("Current state: ").append(gameState.name())
-					.append(" Request: ").append("RUNNING").toString());
+			throw new IllegalStateException(
+					String.format("Current state: %s Request: RUNNING", gameState.name()));
 
 		int[][] lastBoard = board.clone();
 		
@@ -259,7 +259,6 @@ public class Game2048 {
 		{
 			lastBoard = null;
 			showData(level, score, board);
-			score = 0;
 			gameState = GameState.LEVEL_UP;
 			communicate.levelUpEnterNextLevel(level, score, new Game2048Communicate.Informer() {
 				@Override
@@ -284,8 +283,8 @@ public class Game2048 {
 	public synchronized boolean backStep()
 	{
 		if (gameState != GameState.RUNNING)
-			throw new IllegalStateException(new StringBuilder("Current state: ").append(gameState.name())
-					.append(" Request: ").append("RUNNING").toString());
+			throw new IllegalStateException(
+					String.format("Current state: %s Request: RUNNING", gameState.name()));
 
 		if (lastBoard==null) return false;
 		board = lastBoard.clone();
@@ -302,8 +301,8 @@ public class Game2048 {
 	public synchronized boolean cleanGrid(int height, int width)
 	{
 		if (gameState != GameState.RUNNING)
-			throw new IllegalStateException(new StringBuilder("Current state: ").append(gameState.name())
-					.append(" Request: ").append("RUNNING").toString());
+			throw new IllegalStateException(
+					String.format("Current state: %s Request: RUNNING", gameState.name()));
 
 		if (height < 0 || height>=boardH || width < 0 || width>=boardW)
 			return false;
@@ -318,8 +317,8 @@ public class Game2048 {
 	private void loadFailedRespond(boolean startNew)
 	{
 		if (gameState != GameState.LOAD_FAILED)
-			throw new IllegalStateException(new StringBuilder("Current state: ").append(gameState.name())
-					.append(" Request: ").append("LOAD_FAILED").toString());
+			throw new IllegalStateException(
+					String.format("Current state: %s Request: LOAD_FAILED", gameState.name()));
 		else if (startNew)
 		{
 			board = new int[boardH][boardW];
@@ -335,8 +334,8 @@ public class Game2048 {
 	private void saveFailedRespond(boolean forceEnd)
 	{
 		if (gameState != GameState.SAVE_FAILED)
-			throw new IllegalStateException(new StringBuilder("Current state: ").append(gameState.name())
-					.append(" Request: ").append("SAVE_FAILED").toString());
+			throw new IllegalStateException(
+					String.format("Current state: %s Request: SAVE_FAILED", gameState.name()));
 		else if (forceEnd)
 		{
 			board = lastBoard = null;
@@ -349,8 +348,8 @@ public class Game2048 {
 	private void gameEndRespond(boolean isReplay)
 	{
 		if (gameState != GameState.GAME_END)
-			throw new IllegalStateException(new StringBuilder("Current state: ").append(gameState.name())
-					.append(" Request: ").append("GAME_END").toString());
+			throw new IllegalStateException(
+					String.format("Current state: %s Request: GAME_END", gameState.name()));
 		else if (isReplay) replay(true);
 		gameState = GameState.RUNNING;
 	}
@@ -358,8 +357,8 @@ public class Game2048 {
 	private void levelUpRespond(boolean goNextLevel)
 	{
 		if (gameState != GameState.LEVEL_UP)
-			throw new IllegalStateException(new StringBuilder("Current state: ").append(gameState.name())
-					.append(" Request: ").append("LEVEL_UP").toString());
+			throw new IllegalStateException(
+					String.format("Current state: %s Request: LEVEL_UP", gameState.name()));
 		else if (goNextLevel)
 		{
 			for (int height = 0; height < boardH; height++)
