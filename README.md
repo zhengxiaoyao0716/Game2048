@@ -1,5 +1,5 @@
-# Game2048<br> [![Join the chat at https://gitter.im/zhengxiaoyao0716/Digimon2048](https://badges.gitter.im/zhengxiaoyao0716/Digimon2048.svg)](https://gitter.im/zhengxiaoyao0716/Digimon2048?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-##功能齐全的2048.<br>
+# Game2048 [![Join the chat at https://gitter.im/zhengxiaoyao0716/Digimon2048](https://badges.gitter.im/zhengxiaoyao0716/Digimon2048.svg)](https://gitter.im/zhengxiaoyao0716/Digimon2048?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+##功能齐全的2048.[这是基于该项目做的数码宝贝2048(https://github.com/zhengxiaoyao0716/Digimon2048)<br>
 ###使用说明：<br>
 ####step 1：实现游戏所需的功能<br>
     您需要一个回调接口(GameCommunicate)的实例，请按照提示实现接口中的所有方法。
